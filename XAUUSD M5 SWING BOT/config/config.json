@@ -1,0 +1,18 @@
+{
+    "symbol": "XAUUSD",
+    "tp_points": 200,
+    "sl_points": 80,
+    "horizon_minutes": 30,
+    "long_confidence_threshold": 0.55,
+    "short_confidence_threshold": 0.55,
+    "max_trades_per_day": 10,
+    "max_trades_per_direction": 6,
+    "lot_size": 0.05,
+    "magic_number": 123456,
+    "spread_max": 50,
+    "trading_hours_start": 8,
+    "trading_hours_end": 20,
+    "check_interval_seconds": 60,
+    "max_daily_loss_usd": 100,
+    "risk_per_trade_pct": 1.0
+}
