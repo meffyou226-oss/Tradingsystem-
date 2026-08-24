@@ -1,0 +1,2 @@
+best_threshold,best_val_pf,val_auc,test_auc,test_accuracy,test_pf,test_profit,test_win_rate,test_n_trades,test_max_dd
+0.7,6.185915492957746,0.6206182585130692,0.6440236030522024,0.6203730549917851,8.184205128205129,17511.5,0.8036174669674508,49648,-2.0

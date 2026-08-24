@@ -4,23 +4,21 @@ data/targets/xauusd_m1_targets.csv
 data/targets/target_config.csv
 data/targets/*.csv
 
-# Model binaries
-models/*.pkl
+# Model binaries (small PKL files tracked, large excluded)
 models/*.joblib
 models/*.h5
 models/*.ckpt
 models/*.pt
 
-# Large intermediate results (but keep small analysis CSVs)
+# Large intermediate results
 results/predictions_*.csv
 results/walkforward_*.csv
 results/large_*.csv
-results/xgboost_oos/predictions_oos.csv
 
 # Large trade files
-backtests/ml_*_test_trades.csv
+backtests/ml_*_trades.csv
 backtests/baseline_*_trades.csv
-backtests/xgboost_oos_trades.csv
+backtests/xgboost_oos*_trades.csv
 
 # Cache
 __pycache__/
