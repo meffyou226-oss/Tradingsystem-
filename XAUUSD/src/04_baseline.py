@@ -1,5 +1,6 @@
 """
 <<<<<<< ours
+<<<<<<< ours
 Baseline-Trading-Strategien (ohne ML).
 
 Implementiert einfache, bewährte Strategien für Vergleich mit ML-Modellen:
@@ -183,6 +184,8 @@ def run_baseline_backtests():
 if __name__ == "__main__":
     results = run_baseline_backtests()
 =======
+=======
+>>>>>>> theirs
 Baseline-Strategien für XAUUSD M1.
 
 Einfache regelbasierte Strategien als Benchmark:
@@ -454,4 +457,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+<<<<<<< ours
+>>>>>>> theirs
+=======
 >>>>>>> theirs

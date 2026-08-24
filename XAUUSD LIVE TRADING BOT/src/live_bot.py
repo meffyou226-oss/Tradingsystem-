@@ -1,9 +1,10 @@
 """
-XAUUSD Live Trading Bot - MT5 Anbindung (LONG + SHORT, Scalping + Swing).
+XAUUSD Live Trading Bot - MT5 Anbindung (LONG + SHORT, M1/M5/M15).
 
-Zwei Strategien:
-1. SCALPING: TP=45, SL=15, H=5min (AUC=0.644) - für kleine Lots
-2. SWING: TP=80, SL=30, H=45min (AUC=0.648) - für größere Gewinne
+Unterstützte Strategien:
+- M1_SCALPING: TP=45, SL=15, H=5min (AUC=0.644)
+- M5_SWING: TP=200, SL=80, H=30min (AUC=0.651) - EMPFOHLEN
+- M15_SWING: TP=250, SL=100, H=135min (AUC=0.643)
 """
 
 import os
@@ -41,36 +42,46 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# === Konfiguration ===
-# Strategie wählen: "SCALPING" oder "SWING"
-STRATEGY = "SCALPING"  # SCALPING | SWING
+# === Strategie wählen ===
+STRATEGY = "M5_SWING"  # M1_SCALPING | M5_SWING | M15_SWING
 
 STRATEGIES = {
-    "SCALPING": {
+    "M1_SCALPING": {
         "tp_points": 45,
         "sl_points": 15,
         "horizon_minutes": 5,
+        "mt5_timeframe": "M1",
         "long_model": "xgboost.pkl",
         "short_model": "xgboost_short.pkl",
-        "description": "TP=45, SL=15, H=5min (AUC=0.644)",
+        "description": "M1 Scalping: TP=45, SL=15, H=5min (AUC=0.644)",
     },
-    "SWING": {
-        "tp_points": 80,
-        "sl_points": 30,
-        "horizon_minutes": 45,
-        "long_model": "xgboost_swing.pkl",
-        "short_model": "xgboost_swing_short.pkl",
-        "description": "TP=80, SL=30, H=45min (AUC=0.648)",
+    "M5_SWING": {
+        "tp_points": 200,
+        "sl_points": 80,
+        "horizon_minutes": 30,
+        "mt5_timeframe": "M5",
+        "long_model": "xgboost_m5_swing_h6_tp200_sl80.pkl",
+        "short_model": "xgboost_m5_swing_short_h6_tp200_sl80.pkl",
+        "description": "M5 Swing: TP=200, SL=80, H=30min (AUC=0.651)",
+    },
+    "M15_SWING": {
+        "tp_points": 250,
+        "sl_points": 100,
+        "horizon_minutes": 135,
+        "mt5_timeframe": "M15",
+        "long_model": "xgboost_m15_swing_h9_tp250_sl100.pkl",
+        "short_model": "xgboost_m15_swing_short_h9_tp250_sl100.pkl",
+        "description": "M15 Swing: TP=250, SL=100, H=135min (AUC=0.643)",
     },
 }
 
 CONFIG = {
     "symbol": "XAUUSD",
-    "long_confidence_threshold": 0.75,
-    "short_confidence_threshold": 0.75,
-    "max_trades_per_day": 5,
-    "max_trades_per_direction": 3,
-    "lot_size": 0.01,
+    "long_confidence_threshold": 0.70,
+    "short_confidence_threshold": 0.70,
+    "max_trades_per_day": 8,
+    "max_trades_per_direction": 5,
+    "lot_size": 0.05,
     "magic_number": 123456,
     "spread_max": 50,
     "trading_hours_start": 8,
@@ -119,8 +130,10 @@ class MT5Connection:
             return None
         return {"bid": tick.bid, "ask": tick.ask, "spread": (tick.ask - tick.bid) / 0.01}
 
-    def get_rates(self, count=500):
-        rates = mt5.copy_rates_from_pos(self.symbol, mt5.TIMEFRAME_M1, 0, count)
+    def get_rates(self, timeframe="M5", count=500):
+        tf_map = {"M1": mt5.TIMEFRAME_M1, "M5": mt5.TIMEFRAME_M5, "M15": mt5.TIMEFRAME_M15}
+        tf = tf_map.get(timeframe, mt5.TIMEFRAME_M5)
+        rates = mt5.copy_rates_from_pos(self.symbol, tf, 0, count)
         if rates is None:
             return None
         df = pd.DataFrame(rates)
@@ -173,7 +186,7 @@ class FeatureCalculator:
     def __init__(self):
         self.feature_columns = [
             "candle_return", "candle_range", "body_size", "upper_wick", "lower_wick",
-            "body_to_range", "wick_to_range",
+            "body_to_range",
             "dist_ema_5", "dist_ema_10", "dist_ema_20", "dist_ema_50", "dist_ema_100", "dist_ema_200",
             "ema_slope_20", "ema_slope_50", "ema_slope_100",
             "atr_14_norm", "vol_5", "vol_10", "vol_20", "vol_50",
@@ -182,13 +195,12 @@ class FeatureCalculator:
             "bb_width", "bb_position",
             "dist_high_5", "dist_low_5", "dist_high_10", "dist_low_10",
             "dist_high_20", "dist_low_20", "dist_high_50", "dist_low_50",
-            "breakout_high_5", "breakout_low_5", "breakout_high_10", "breakout_low_10",
-            "breakout_high_20", "breakout_low_20", "breakout_high_50", "breakout_low_50",
+            "breakout_high_10", "breakout_low_10", "breakout_high_20", "breakout_low_20",
+            "breakout_high_50", "breakout_low_50",
             "adx_14", "plus_di_14", "minus_di_14",
-            "hour", "day_of_week", "is_london_session", "is_ny_session", "is_asia_session",
-            "hour_sin", "hour_cos", "day_sin", "day_cos",
+            "hour", "day_of_week", "is_london", "is_ny",
+            "hour_sin", "hour_cos",
             "vol_regime", "vol_ratio",
-            "dist_prev_high", "dist_prev_low",
         ]
 
     def calculate(self, df):
@@ -197,60 +209,59 @@ class FeatureCalculator:
         rng = df["high"] - df["low"]
         rng_safe = rng.where(rng > 0, np.nan)
 
-        df["candle_return"] = (body / df["open"].shift(1)).shift(1)
-        df["candle_range"] = (rng / df["open"].shift(1)).shift(1)
-        df["body_size"] = (np.abs(body) / df["open"].shift(1)).shift(1)
-        df["upper_wick"] = ((df["high"] - np.maximum(df["open"], df["close"])) / df["open"].shift(1)).shift(1)
-        df["lower_wick"] = ((np.minimum(df["open"], df["close"]) - df["low"]) / df["open"].shift(1)).shift(1)
-        df["body_to_range"] = (np.abs(body) / rng_safe).shift(1)
-        df["wick_to_range"] = ((rng_safe - np.abs(body)) / rng_safe.replace(0, np.nan)).shift(1)
+        df["candle_return"] = body / df["open"]
+        df["candle_range"] = rng / df["open"]
+        df["body_size"] = np.abs(body) / df["open"]
+        df["upper_wick"] = (df["high"] - np.maximum(df["open"], df["close"])) / df["open"]
+        df["lower_wick"] = (np.minimum(df["open"], df["close"]) - df["low"]) / df["open"]
+        df["body_to_range"] = np.abs(body) / rng_safe
 
         for p in [5, 10, 20, 50, 100, 200]:
             ema = df["close"].ewm(span=p, adjust=False).mean()
-            df[f"dist_ema_{p}"] = ((df["close"] - ema) / ema).shift(1)
+            df[f"dist_ema_{p}"] = (df["close"] - ema) / ema
 
         for p in [20, 50, 100]:
             ema = df["close"].ewm(span=p, adjust=False).mean()
-            df[f"ema_slope_{p}"] = ((ema - ema.shift(10)) / df["close"].shift(1)).shift(1)
+            df[f"ema_slope_{p}"] = (ema - ema.shift(10)) / df["close"]
 
         high_low = df["high"] - df["low"]
         high_close = (df["high"] - df["close"].shift(1)).abs()
         low_close = (df["low"] - df["close"].shift(1)).abs()
         tr = pd.concat([high_low, high_close, low_close], axis=1).max(axis=1)
         atr_14 = tr.rolling(14).mean()
-        df["atr_14_norm"] = (atr_14 / df["close"].shift(1)).shift(1)
+        df["atr_14_norm"] = atr_14 / df["close"]
 
         log_ret = np.log(df["close"] / df["close"].shift(1))
         for p in [5, 10, 20, 50]:
-            df[f"vol_{p}"] = (log_ret.rolling(p).std() * np.sqrt(365 * 24 * 60)).shift(1) * 100
+            df[f"vol_{p}"] = log_ret.rolling(p).std() * np.sqrt(365 * 24 * 60) * 100
 
         delta = df["close"].diff()
         gain = (delta.where(delta > 0, 0)).rolling(14).mean()
         loss = (-delta.where(delta < 0, 0)).rolling(14).mean()
         rs = gain / loss.replace(0, np.nan)
-        df["rsi_14"] = (100 - (100 / (1 + rs))).shift(1)
+        df["rsi_14"] = 100 - (100 / (1 + rs))
 
         for p in [1, 3, 5, 10, 15, 20, 50]:
-            df[f"roc_{p}"] = ((df["close"] - df["close"].shift(p)) / df["close"].shift(p)).shift(1)
+            df[f"roc_{p}"] = (df["close"] - df["close"].shift(p)) / df["close"].shift(p)
 
         sma = df["close"].rolling(20).mean()
         std = df["close"].rolling(20).std()
         bb_upper = sma + 2.0 * std
         bb_lower = sma - 2.0 * std
-        df["bb_width"] = ((bb_upper - bb_lower) / sma).shift(1)
-        df["bb_position"] = ((df["close"] - bb_lower) / (bb_upper - bb_lower)).shift(1)
+        df["bb_width"] = (bb_upper - bb_lower) / sma
+        df["bb_position"] = (df["close"] - bb_lower) / (bb_upper - bb_lower)
 
         for p in [5, 10, 20, 50]:
-            df[f"high_{p}"] = df["high"].shift(1).rolling(p).max()
-            df[f"low_{p}"] = df["low"].shift(1).rolling(p).min()
-            df[f"dist_high_{p}"] = ((df["close"] - df[f"high_{p}"]) / df["close"].shift(1)).shift(1)
-            df[f"dist_low_{p}"] = ((df[f"low_{p}"] - df["close"]) / df["close"].shift(1)).shift(1)
+            df[f"high_{p}"] = df["high"].rolling(p).max()
+            df[f"low_{p}"] = df["low"].rolling(p).min()
+            df[f"dist_high_{p}"] = (df["close"] - df[f"high_{p}"]) / df["close"]
+            df[f"dist_low_{p}"] = (df[f"low_{p}"] - df["close"]) / df["close"]
 
-        for p in [5, 10, 20, 50]:
-            recent_high = df["high"].shift(1).rolling(p).max()
-            recent_low = df["low"].shift(1).rolling(p).min()
-            df[f"breakout_high_{p}"] = (df["close"] > recent_high).astype(int).shift(1)
-            df[f"breakout_low_{p}"] = (df["close"] < recent_low).astype(int).shift(1)
+        for p in [10, 20, 50]:
+            recent_high = df["high"].rolling(p).max()
+            recent_low = df["low"].rolling(p).min()
+            df[f"breakout_high_{p}"] = (df["close"] > recent_high).astype(int)
+            df[f"breakout_low_{p}"] = (df["close"] < recent_low).astype(int)
 
         high_diff = df["high"].diff()
         low_diff = df["low"].diff()
@@ -260,30 +271,22 @@ class FeatureCalculator:
         plus_di = (plus_dm.rolling(14).sum() / tr_abs.rolling(14).sum() * 100)
         minus_di = (minus_dm.rolling(14).sum() / tr_abs.rolling(14).sum() * 100)
         dx = ((plus_di - minus_di).abs() / (plus_di + minus_di).replace(0, np.nan) * 100)
-        df["adx_14"] = dx.rolling(14).mean().shift(1)
-        df["plus_di_14"] = plus_di.shift(1)
-        df["minus_di_14"] = minus_di.shift(1)
+        df["adx_14"] = dx.rolling(14).mean()
+        df["plus_di_14"] = plus_di
+        df["minus_di_14"] = minus_di
 
         ts = df["timestamp"]
         df["hour"] = ts.dt.hour.astype(float)
         df["day_of_week"] = ts.dt.dayofweek.astype(float)
-        df["is_london_session"] = ((ts.dt.hour >= 8) & (ts.dt.hour < 16)).astype(int)
-        df["is_ny_session"] = ((ts.dt.hour >= 13) & (ts.dt.hour < 20)).astype(int)
-        df["is_asia_session"] = ((ts.dt.hour >= 0) & (ts.dt.hour < 8)).astype(int)
+        df["is_london"] = ((ts.dt.hour >= 8) & (ts.dt.hour < 16)).astype(int)
+        df["is_ny"] = ((ts.dt.hour >= 13) & (ts.dt.hour < 20)).astype(int)
         df["hour_sin"] = np.sin(2 * np.pi * df["hour"] / 24)
         df["hour_cos"] = np.cos(2 * np.pi * df["hour"] / 24)
-        df["day_sin"] = np.sin(2 * np.pi * df["day_of_week"] / 7)
-        df["day_cos"] = np.cos(2 * np.pi * df["day_of_week"] / 7)
 
         vol_20 = log_ret.rolling(20).std()
         vol_50 = log_ret.rolling(50).std()
-        df["vol_regime"] = (vol_20 > vol_50).astype(int).shift(1)
-        df["vol_ratio"] = (vol_20 / vol_50).shift(1)
-
-        df["prev_day_high"] = df["high"].shift(1).rolling(390).max()
-        df["prev_day_low"] = df["low"].shift(1).rolling(390).min()
-        df["dist_prev_high"] = ((df["close"] - df["prev_day_high"]) / df["close"].shift(1)).shift(1)
-        df["dist_prev_low"] = ((df["close"] - df["prev_day_low"]) / df["close"].shift(1)).shift(1)
+        df["vol_regime"] = (vol_20 > vol_50).astype(int)
+        df["vol_ratio"] = vol_20 / vol_50
 
         return df
 
@@ -313,7 +316,7 @@ class TradingBot:
         with open(short_path, "rb") as f:
             self.model_short = pickle.load(f)
 
-        logger.info(f"Modelle geladen: {STRATEGY} Strategie")
+        logger.info(f"Modelle geladen: {STRATEGY}")
         return True
 
     def predict(self, df):
@@ -362,7 +365,7 @@ class TradingBot:
     def run(self):
         strategy = STRATEGIES[STRATEGY]
         logger.info("=" * 60)
-        logger.info(f"XAUUSD Bot: {STRATEGY} Strategie")
+        logger.info(f"XAUUSD Bot: {STRATEGY}")
         logger.info(f"  {strategy['description']}")
         logger.info(f"  Lot: {CONFIG['lot_size']} | Max Trades/Tag: {CONFIG['max_trades_per_day']}")
         logger.info("=" * 60)
@@ -377,7 +380,7 @@ class TradingBot:
 
         try:
             while self.running:
-                df = self.mt5.get_rates(count=500)
+                df = self.mt5.get_rates(strategy["mt5_timeframe"], 500)
                 if df is None or len(df) < 200:
                     time.sleep(10)
                     continue

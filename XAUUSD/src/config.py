@@ -123,4 +123,4 @@ MODELS = {
 
 # === Hauptmodell ===
 PRIMARY_MODEL = "xgboost"
-TARGET_COLUMN = "target_h10_sl250_rr2.0"
+TARGET_COLUMN = "target_h5_sl25_rr2.0"
