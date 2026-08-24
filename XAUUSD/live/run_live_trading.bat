@@ -34,9 +34,14 @@ echo.
 echo [1/3] Installiere Python-Bibliotheken...
 echo ------------------------------------------------
 
+echo   Python-Pfad wird gesucht...
+set PIP_CMD=python -m pip
+
+!PIP_CMD! install --quiet --upgrade pip
+
 echo   Installiere: numpy, pandas, scikit-learn...
-pip install --quiet "numpy<2"
-pip install --quiet pandas scikit-learn
+!PIP_CMD! install --quiet "numpy<2"
+!PIP_CMD! install --quiet pandas scikit-learn
 if errorlevel 1 (
     echo FEHLER bei Core-Bibliotheken
     pause
@@ -44,7 +49,7 @@ if errorlevel 1 (
 )
 
 echo   Installiere: xgboost...
-pip install --quiet xgboost
+!PIP_CMD! install --quiet xgboost
 if errorlevel 1 (
     echo FEHLER: xgboost Installation fehlgeschlagen
     pause
@@ -52,7 +57,7 @@ if errorlevel 1 (
 )
 
 echo   Installiere: MetaTrader5...
-pip install --quiet MetaTrader5
+!PIP_CMD! install --quiet MetaTrader5
 if errorlevel 1 (
     echo FEHLER: MetaTrader5 Installation fehlgeschlagen
     echo Stellen Sie sicher, dass MetaTrader 5 installiert ist.
@@ -61,7 +66,7 @@ if errorlevel 1 (
 )
 
 echo   Installiere: joblib, scipy...
-pip install --quiet joblib scipy
+!PIP_CMD! install --quiet joblib scipy
 if errorlevel 1 (
     echo WARNUNG: joblib/scipy Installation fehlgeschlagen
 )
