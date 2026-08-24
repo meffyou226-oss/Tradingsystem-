@@ -1,10 +1,8 @@
 """
-XAUUSD Live Trading Bot - MT5 Anbindung (LONG + SHORT, M1/M5/M15).
+XAUUSD Live Trading Bot - MT5 Anbindung (LONG + SHORT, M5 Swing).
 
-Unterstützte Strategien:
-- M1_SCALPING: TP=45, SL=15, H=5min (AUC=0.644)
-- M5_SWING: TP=200, SL=80, H=30min (AUC=0.651) - EMPFOHLEN
-- M15_SWING: TP=250, SL=100, H=135min (AUC=0.643)
+Optimierte Strategie: M5 Swing (TP=200, SL=80, H=30min).
+OOS: 6.3 Trades/Tag, 79% Winrate, PF=9, 157 USD/Monat (0.05 Lots).
 """
 
 import os
@@ -42,45 +40,19 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# === Strategie wählen ===
-STRATEGY = "M5_SWING"  # M1_SCALPING | M5_SWING | M15_SWING
-
-STRATEGIES = {
-    "M1_SCALPING": {
-        "tp_points": 45,
-        "sl_points": 15,
-        "horizon_minutes": 5,
-        "mt5_timeframe": "M1",
-        "long_model": "xgboost.pkl",
-        "short_model": "xgboost_short.pkl",
-        "description": "M1 Scalping: TP=45, SL=15, H=5min (AUC=0.644)",
-    },
-    "M5_SWING": {
-        "tp_points": 200,
-        "sl_points": 80,
-        "horizon_minutes": 30,
-        "mt5_timeframe": "M5",
-        "long_model": "xgboost_m5_swing_h6_tp200_sl80.pkl",
-        "short_model": "xgboost_m5_swing_short_h6_tp200_sl80.pkl",
-        "description": "M5 Swing: TP=200, SL=80, H=30min (AUC=0.651)",
-    },
-    "M15_SWING": {
-        "tp_points": 250,
-        "sl_points": 100,
-        "horizon_minutes": 135,
-        "mt5_timeframe": "M15",
-        "long_model": "xgboost_m15_swing_h9_tp250_sl100.pkl",
-        "short_model": "xgboost_m15_swing_short_h9_tp250_sl100.pkl",
-        "description": "M15 Swing: TP=250, SL=100, H=135min (AUC=0.643)",
-    },
-}
-
+# === Konfiguration ===
 CONFIG = {
     "symbol": "XAUUSD",
-    "long_confidence_threshold": 0.70,
-    "short_confidence_threshold": 0.70,
-    "max_trades_per_day": 8,
-    "max_trades_per_direction": 5,
+    "tp_points": 200,
+    "sl_points": 80,
+    "horizon_minutes": 30,
+    "mt5_timeframe": "M5",
+    "long_model": "xgboost_m5_swing_h6_tp200_sl80.pkl",
+    "short_model": "xgboost_m5_swing_short_h6_tp200_sl80.pkl",
+    "long_confidence_threshold": 0.55,
+    "short_confidence_threshold": 0.55,
+    "max_trades_per_day": 10,
+    "max_trades_per_direction": 6,
     "lot_size": 0.05,
     "magic_number": 123456,
     "spread_max": 50,
@@ -168,7 +140,7 @@ class MT5Connection:
             "sl": sl,
             "tp": tp,
             "magic": CONFIG["magic_number"],
-            "comment": f"XAUUSD_{STRATEGY}_{order_type}",
+            "comment": f"XAUUSD_M5_SWING_{order_type}",
             "type_time": mt5.ORDER_TIME_GTC,
             "type_filling": mt5.ORDER_FILLING_IOC,
         }
@@ -303,9 +275,8 @@ class TradingBot:
         self.last_trade_date = None
 
     def load_models(self):
-        strategy = STRATEGIES[STRATEGY]
-        long_path = os.path.join(MODELS_DIR, strategy["long_model"])
-        short_path = os.path.join(MODELS_DIR, strategy["short_model"])
+        long_path = os.path.join(MODELS_DIR, CONFIG["long_model"])
+        short_path = os.path.join(MODELS_DIR, CONFIG["short_model"])
 
         if not os.path.exists(long_path) or not os.path.exists(short_path):
             logger.error(f"Modelle nicht gefunden!")
@@ -316,7 +287,7 @@ class TradingBot:
         with open(short_path, "rb") as f:
             self.model_short = pickle.load(f)
 
-        logger.info(f"Modelle geladen: {STRATEGY}")
+        logger.info(f"Modelle geladen: M5 Swing")
         return True
 
     def predict(self, df):
@@ -363,11 +334,10 @@ class TradingBot:
         return True
 
     def run(self):
-        strategy = STRATEGIES[STRATEGY]
         logger.info("=" * 60)
-        logger.info(f"XAUUSD Bot: {STRATEGY}")
-        logger.info(f"  {strategy['description']}")
+        logger.info(f"XAUUSD Bot: M5 Swing (TP=200, SL=80)")
         logger.info(f"  Lot: {CONFIG['lot_size']} | Max Trades/Tag: {CONFIG['max_trades_per_day']}")
+        logger.info(f"  Threshold: {CONFIG['long_confidence_threshold']}")
         logger.info("=" * 60)
 
         if not self.mt5.connect():
@@ -380,7 +350,7 @@ class TradingBot:
 
         try:
             while self.running:
-                df = self.mt5.get_rates(strategy["mt5_timeframe"], 500)
+                df = self.mt5.get_rates(CONFIG["mt5_timeframe"], 500)
                 if df is None or len(df) < 200:
                     time.sleep(10)
                     continue
@@ -406,14 +376,14 @@ class TradingBot:
                 if self.should_trade(pred_long, "LONG", current_hour, spread):
                     logger.info(f"LONG SIGNAL: {pred_long:.3f}")
                     result = self.mt5.place_order("BUY", CONFIG["lot_size"],
-                                                   strategy["sl_points"], strategy["tp_points"])
+                                                   CONFIG["sl_points"], CONFIG["tp_points"])
                     if result:
                         self.daily_long_trades += 1
 
                 if self.should_trade(pred_short, "SHORT", current_hour, spread):
                     logger.info(f"SHORT SIGNAL: {pred_short:.3f}")
                     result = self.mt5.place_order("SELL", CONFIG["lot_size"],
-                                                   strategy["sl_points"], strategy["tp_points"])
+                                                   CONFIG["sl_points"], CONFIG["tp_points"])
                     if result:
                         self.daily_short_trades += 1
 
