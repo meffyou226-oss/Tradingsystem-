@@ -1,8 +1,9 @@
 """
-XAUUSD Live Trading Bot - MT5 Anbindung (LONG + SHORT).
+XAUUSD Live Trading Bot - MT5 Anbindung (LONG + SHORT, Scalping + Swing).
 
-Verbindet sich direkt mit MetaTrader 5, holt Echtzeitdaten,
-berechnet Features und gibt LONG und SHORT Trading-Signale.
+Zwei Strategien:
+1. SCALPING: TP=45, SL=15, H=5min (AUC=0.644) - für kleine Lots
+2. SWING: TP=80, SL=30, H=45min (AUC=0.648) - für größere Gewinne
 """
 
 import os
@@ -12,29 +13,24 @@ import json
 import pickle
 import logging
 from datetime import datetime, timedelta
-from threading import Thread, Event
 
 import numpy as np
 import pandas as pd
 
-# MT5 Import
 try:
     import MetaTrader5 as mt5
     MT5_AVAILABLE = True
 except ImportError:
     MT5_AVAILABLE = False
-    print("WARNUNG: MetaTrader5 Paket nicht installiert!")
 
 # === Pfade ===
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-BASE_DIR = os.path.dirname(BASE_DIR)  # Gehe ein Verzeichnis hoch
+BASE_DIR = os.path.dirname(BASE_DIR)
 MODELS_DIR = os.path.join(BASE_DIR, "models")
 LOGS_DIR = os.path.join(BASE_DIR, "logs")
-CONFIG_DIR = os.path.join(BASE_DIR, "config")
 
 os.makedirs(LOGS_DIR, exist_ok=True)
 
-# Logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
@@ -46,11 +42,30 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # === Konfiguration ===
+# Strategie wählen: "SCALPING" oder "SWING"
+STRATEGY = "SCALPING"  # SCALPING | SWING
+
+STRATEGIES = {
+    "SCALPING": {
+        "tp_points": 45,
+        "sl_points": 15,
+        "horizon_minutes": 5,
+        "long_model": "xgboost.pkl",
+        "short_model": "xgboost_short.pkl",
+        "description": "TP=45, SL=15, H=5min (AUC=0.644)",
+    },
+    "SWING": {
+        "tp_points": 80,
+        "sl_points": 30,
+        "horizon_minutes": 45,
+        "long_model": "xgboost_swing.pkl",
+        "short_model": "xgboost_swing_short.pkl",
+        "description": "TP=80, SL=30, H=45min (AUC=0.648)",
+    },
+}
+
 CONFIG = {
     "symbol": "XAUUSD",
-    "tp_points": 45,        # OOS-optimiert (PF=13.64, Win=82%)
-    "sl_points": 15,        # Realistisch: Spread+Slippage+Puffer
-    "horizon_minutes": 5,
     "long_confidence_threshold": 0.75,
     "short_confidence_threshold": 0.75,
     "max_trades_per_day": 5,
@@ -65,19 +80,16 @@ CONFIG = {
 
 
 class MT5Connection:
-    """MetaTrader 5 Verbindungsklasse."""
-
     def __init__(self):
         self.connected = False
         self.symbol = CONFIG["symbol"]
 
     def connect(self):
         if not MT5_AVAILABLE:
-            logger.error("MetaTrader5 Paket nicht verfuegbar!")
+            logger.error("MetaTrader5 nicht verfuegbar!")
             return False
-
         if not mt5.initialize():
-            logger.error(f"MT5 Initialisierung fehlgeschlagen: {mt5.last_error()}")
+            logger.error(f"MT5 Init fehlgeschlagen: {mt5.last_error()}")
             return False
 
         symbol_info = mt5.symbol_info(self.symbol)
@@ -86,36 +98,26 @@ class MT5Connection:
                 symbol_info = mt5.symbol_info(alt)
                 if symbol_info:
                     self.symbol = alt
-                    logger.info(f"Alternative Symbol gefunden: {alt}")
                     break
 
         if not mt5.symbol_select(self.symbol, True):
-            logger.error(f"Symbol konnte nicht ausgewaehlt werden!")
             return False
 
         self.connected = True
         account_info = mt5.account_info()
         if account_info:
-            logger.info(f"Verbunden: {account_info.server} | "
-                       f"Account: {account_info.login} | "
-                       f"Balance: {account_info.balance:.2f} {account_info.currency}")
+            logger.info(f"Verbunden: {account_info.server} | Balance: {account_info.balance:.2f}")
         return True
 
     def disconnect(self):
         mt5.shutdown()
         self.connected = False
-        logger.info("MT5 Verbindung getrennt.")
 
     def get_current_price(self):
         tick = mt5.symbol_info_tick(self.symbol)
         if tick is None:
             return None
-        return {
-            "bid": tick.bid,
-            "ask": tick.ask,
-            "spread": (tick.ask - tick.bid) / 0.01,
-            "time": datetime.fromtimestamp(tick.time, tz=None),
-        }
+        return {"bid": tick.bid, "ask": tick.ask, "spread": (tick.ask - tick.bid) / 0.01}
 
     def get_rates(self, count=500):
         rates = mt5.copy_rates_from_pos(self.symbol, mt5.TIMEFRAME_M1, 0, count)
@@ -123,10 +125,8 @@ class MT5Connection:
             return None
         df = pd.DataFrame(rates)
         df["time"] = pd.to_datetime(df["time"], unit="s")
-        df = df.rename(columns={
-            "time": "timestamp", "tick_volume": "tick_volume",
-            "spread": "spread", "real_volume": "real_volume",
-        })
+        df = df.rename(columns={"time": "timestamp", "tick_volume": "tick_volume",
+                                "spread": "spread", "real_volume": "real_volume"})
         return df
 
     def place_order(self, order_type, lot_size, sl_points, tp_points):
@@ -138,12 +138,10 @@ class MT5Connection:
         point = symbol_info.point
 
         if order_type == "BUY":
-            order_type_mt5 = mt5.ORDER_TYPE_BUY
             price = price_data["ask"]
             sl = price - sl_points * point
             tp = price + tp_points * point
         else:
-            order_type_mt5 = mt5.ORDER_TYPE_SELL
             price = price_data["bid"]
             sl = price + sl_points * point
             tp = price - tp_points * point
@@ -152,32 +150,26 @@ class MT5Connection:
             "action": mt5.TRADE_ACTION_DEAL,
             "symbol": self.symbol,
             "volume": lot_size,
-            "type": order_type_mt5,
+            "type": mt5.ORDER_TYPE_BUY if order_type == "BUY" else mt5.ORDER_TYPE_SELL,
             "price": price,
             "sl": sl,
             "tp": tp,
             "magic": CONFIG["magic_number"],
-            "comment": f"XAUUSD_ML_{order_type}",
+            "comment": f"XAUUSD_{STRATEGY}_{order_type}",
             "type_time": mt5.ORDER_TIME_GTC,
             "type_filling": mt5.ORDER_FILLING_IOC,
         }
 
         result = mt5.order_send(request)
         if result.retcode != mt5.TRADE_RETCODE_DONE:
-            logger.error(f"Order fehlgeschlagen: {result.retcode} - {result.comment}")
+            logger.error(f"Order fehlgeschlagen: {result.retcode}")
             return None
 
         logger.info(f"Order: {order_type} {lot_size} @ {price:.3f} | SL={sl:.3f} TP={tp:.3f}")
         return result
 
-    def get_positions(self):
-        positions = mt5.positions_get(symbol=self.symbol)
-        return positions if positions else []
-
 
 class FeatureCalculator:
-    """Berechnet Features aus M1-Daten."""
-
     def __init__(self):
         self.feature_columns = [
             "candle_return", "candle_range", "body_size", "upper_wick", "lower_wick",
@@ -297,8 +289,6 @@ class FeatureCalculator:
 
 
 class TradingBot:
-    """Haupt-Trading-Bot mit LONG + SHORT."""
-
     def __init__(self):
         self.mt5 = MT5Connection()
         self.feature_calc = FeatureCalculator()
@@ -308,18 +298,14 @@ class TradingBot:
         self.daily_long_trades = 0
         self.daily_short_trades = 0
         self.last_trade_date = None
-        self.stop_event = Event()
 
     def load_models(self):
-        """Lädt LONG und SHORT Modell."""
-        long_path = os.path.join(MODELS_DIR, "xgboost.pkl")
-        short_path = os.path.join(MODELS_DIR, "xgboost_short.pkl")
+        strategy = STRATEGIES[STRATEGY]
+        long_path = os.path.join(MODELS_DIR, strategy["long_model"])
+        short_path = os.path.join(MODELS_DIR, strategy["short_model"])
 
-        if not os.path.exists(long_path):
-            logger.error(f"LONG Modell nicht gefunden: {long_path}")
-            return False
-        if not os.path.exists(short_path):
-            logger.error(f"SHORT Modell nicht gefunden: {short_path}")
+        if not os.path.exists(long_path) or not os.path.exists(short_path):
+            logger.error(f"Modelle nicht gefunden!")
             return False
 
         with open(long_path, "rb") as f:
@@ -327,30 +313,24 @@ class TradingBot:
         with open(short_path, "rb") as f:
             self.model_short = pickle.load(f)
 
-        logger.info("Modelle geladen: xgboost.pkl (LONG) + xgboost_short.pkl (SHORT)")
+        logger.info(f"Modelle geladen: {STRATEGY} Strategie")
         return True
 
     def predict(self, df):
-        """Gibt LONG und SHORT Vorhersagen zurück."""
         if self.model_long is None or self.model_short is None:
             return None, None
 
         feature_cols = [c for c in self.feature_calc.feature_columns if c in df.columns]
         X = df[feature_cols].values.astype(np.float32)
 
-        if len(X) == 0:
+        if len(X) == 0 or np.any(np.isnan(X[-1:])):
             return None, None
 
-        X_last = X[-1:]
-        if np.any(np.isnan(X_last)):
-            return None, None
-
-        pred_long = self.model_long.predict_proba(X_last)[0, 1]
-        pred_short = self.model_short.predict_proba(X_last)[0, 1]
+        pred_long = self.model_long.predict_proba(X[-1:])[0, 1]
+        pred_short = self.model_short.predict_proba(X[-1:])[0, 1]
         return pred_long, pred_short
 
     def should_trade(self, prediction, direction, current_hour, spread):
-        """Prüft ob Trade erlaubt ist."""
         if prediction is None:
             return False
 
@@ -359,51 +339,44 @@ class TradingBot:
 
         if prediction < threshold:
             return False
-
         if current_hour < CONFIG["trading_hours_start"] or current_hour >= CONFIG["trading_hours_end"]:
             return False
-
         if spread > CONFIG["spread_max"]:
             return False
 
-        # Tähler resetten
         today = datetime.now().date()
         if self.last_trade_date != today:
             self.daily_long_trades = 0
             self.daily_short_trades = 0
             self.last_trade_date = today
 
-        # Max Trades pro Richtung
         if direction == "LONG" and self.daily_long_trades >= CONFIG["max_trades_per_direction"]:
             return False
         if direction == "SHORT" and self.daily_short_trades >= CONFIG["max_trades_per_direction"]:
             return False
-
-        # Max Trades total
         if self.daily_long_trades + self.daily_short_trades >= CONFIG["max_trades_per_day"]:
             return False
 
         return True
 
     def run(self):
-        """Hauptloop."""
+        strategy = STRATEGIES[STRATEGY]
         logger.info("=" * 60)
-        logger.info("XAUUSD Live Trading Bot (LONG + SHORT)")
+        logger.info(f"XAUUSD Bot: {STRATEGY} Strategie")
+        logger.info(f"  {strategy['description']}")
+        logger.info(f"  Lot: {CONFIG['lot_size']} | Max Trades/Tag: {CONFIG['max_trades_per_day']}")
         logger.info("=" * 60)
 
         if not self.mt5.connect():
-            logger.error("Keine MT5-Verbindung!")
             return
-
         if not self.load_models():
-            logger.error("Modelle konnten nicht geladen werden!")
             return
 
         self.running = True
         logger.info("Bot laeuft... Ctrl+C zum Stoppen.")
 
         try:
-            while not self.stop_event.is_set():
+            while self.running:
                 df = self.mt5.get_rates(count=500)
                 if df is None or len(df) < 200:
                     time.sleep(10)
@@ -427,34 +400,29 @@ class TradingBot:
                     f"L:{self.daily_long_trades}/S:{self.daily_short_trades}"
                 )
 
-                # LONG Signal
                 if self.should_trade(pred_long, "LONG", current_hour, spread):
-                    logger.info(f"LONG SIGNAL: Confidence={pred_long:.3f}")
+                    logger.info(f"LONG SIGNAL: {pred_long:.3f}")
                     result = self.mt5.place_order("BUY", CONFIG["lot_size"],
-                                                   CONFIG["sl_points"], CONFIG["tp_points"])
+                                                   strategy["sl_points"], strategy["tp_points"])
                     if result:
                         self.daily_long_trades += 1
-                        logger.info(f"BUY platziert! L:{self.daily_long_trades}")
 
-                # SHORT Signal
                 if self.should_trade(pred_short, "SHORT", current_hour, spread):
-                    logger.info(f"SHORT SIGNAL: Confidence={pred_short:.3f}")
+                    logger.info(f"SHORT SIGNAL: {pred_short:.3f}")
                     result = self.mt5.place_order("SELL", CONFIG["lot_size"],
-                                                   CONFIG["sl_points"], CONFIG["tp_points"])
+                                                   strategy["sl_points"], strategy["tp_points"])
                     if result:
                         self.daily_short_trades += 1
-                        logger.info(f"SELL platziert! S:{self.daily_short_trades}")
 
                 time.sleep(CONFIG["check_interval_seconds"])
 
         except KeyboardInterrupt:
-            logger.info("Bot gestoppt (Ctrl+C)")
+            logger.info("Bot gestoppt")
         except Exception as e:
             logger.error(f"Fehler: {e}", exc_info=True)
         finally:
             self.running = False
             self.mt5.disconnect()
-            logger.info("Bot beendet.")
 
 
 def main():
