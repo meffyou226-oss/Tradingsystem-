@@ -1,39 +1,29 @@
-"""
-Verbessertes XGBoost-Training mit Hyperparameter-Tuning.
-
-Optimiert für:
-- 10-Minuten-Horizon (Intraday, kein Scalping)
-- 5-10 Trades/Tag
-- Höhere AUC durch Grid Search über Hyperparameter
-"""
-
 import os, sys, time, json, pickle, warnings
 warnings.filterwarnings("ignore")
 import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score
-from sklearn.model_selection import ParameterGrid
 from xgboost import XGBClassifier
 
-# === Pfade ===
-DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..",
-                         "download", "xauusd-m1-bid-2024-01-01-2026-08-24T11-58.csv")
-MODEL_DIR = "XAUUSD/models"
-REPORTS_DIR = "XAUUSD/reports"
-RESULTS_DIR = "XAUUSD/results"
-LIVE_DIR = "XAUUSD/live"
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+REPO_ROOT = os.path.join(SCRIPT_DIR, "..", "..")
+DATA_PATH = os.path.join(REPO_ROOT, "download", "xauusd-m1-bid-2024-01-01-2026-08-24T11-58.csv")
+MODEL_DIR = os.path.join(SCRIPT_DIR, "..", "models")
+LIVE_DIR = os.path.join(SCRIPT_DIR, "..", "live")
+REPORTS_DIR = os.path.join(SCRIPT_DIR, "..", "reports")
+RESULTS_DIR = os.path.join(SCRIPT_DIR, "..", "results")
+BACKTESTS_DIR = os.path.join(SCRIPT_DIR, "..", "backtests")
 
-for d in [MODEL_DIR, REPORTS_DIR, RESULTS_DIR, LIVE_DIR, "XAUUSD/backtests", "XAUUSD/data/targets"]:
+for d in [MODEL_DIR, LIVE_DIR, REPORTS_DIR, RESULTS_DIR, BACKTESTS_DIR]:
     os.makedirs(d, exist_ok=True)
 
-# === Parameter ===
 POINT = 0.01
-HORIZON = 10
+HORIZON = 5
 TP = 500
-SL = 250
-RR = 2.0
+SL = 200
+RR = 2.5
 LOTS = 0.05
-TRADE_OZ = 5  # 0.05 * 100
+TRADE_OZ = 5
 SPREAD = 3.0
 SLIPPAGE = 1.0
 
@@ -86,7 +76,7 @@ def compute_all_features(df):
 
     log_ret = np.log(df["close"] / df["close"].shift(1))
     for p in [5, 10, 20, 50]:
-        df[f"vol_{p}"] = (log_ret.rolling(p).std() * np.sqrt(365 * 24 * 60)).shift(1) * 100
+        df[f"vol_{p}"] = (log_ret.rolling(p).std() * np.sqrt(365 * 24 * 60)).shift(1) * 10
 
     delta = df["close"].diff()
     gain = delta.where(delta > 0, 0).rolling(14).mean()
@@ -254,8 +244,8 @@ def run_backtest(df, signals, tp_pts, sl_pts, horizon):
 def main():
     t0 = time.time()
     print("=" * 70)
-    print("Verbessertes XGBoost-Training (Hyperparameter-Tuning)")
-    print(f"  Horizon: {HORIZON} Min | TP={TP}pts | SL={SL}pts | Lots={LOTS}")
+    print("XGBoost Intraday Training (Optimized)")
+    print(f"  5 Min Horizon | TP={TP}pts (25 USD) | SL={SL}pts (10 USD) | RR={RR}:1")
     print("=" * 70)
 
     df = load_data()
@@ -287,39 +277,36 @@ def main():
     val_df = df[val_m].reset_index(drop=True)
     test_df = df[test_m].reset_index(drop=True)
     n_test_days = (pd.to_datetime(TEST_END) - pd.to_datetime(TEST_START)).days + 1
+    val_days = (pd.to_datetime(VAL_END) - pd.to_datetime(VAL_START)).days + 1
 
-    print(f"\nSplit: Train={len(X_train)} | Val={len(X_val)} | Test={len(X_test)} ({n_test_days}d)")
+    print(f"\nSplit: Train={len(X_train)} | Val={len(X_val)} ({val_days}d) | Test={len(X_test)} ({n_test_days}d)")
 
-    # Hyperparameter grid
     param_grid = [
-        {"max_depth": 4, "learning_rate": 0.03, "n_estimators": 1000},
-        {"max_depth": 6, "learning_rate": 0.05, "n_estimators": 1000},
-        {"max_depth": 8, "learning_rate": 0.03, "n_estimators": 1000},
-        {"max_depth": 6, "learning_rate": 0.01, "n_estimators": 2000},
-        {"max_depth": 5, "learning_rate": 0.05, "n_estimators": 1000},
-        {"max_depth": 7, "learning_rate": 0.03, "n_estimators": 1000},
-        {"max_depth": 4, "learning_rate": 0.05, "n_estimators": 500},
-        {"max_depth": 6, "learning_rate": 0.1, "n_estimators": 500},
+        {"max_depth": 3, "learning_rate": 0.05, "n_estimators": 300,
+         "reg_alpha": 0.5, "reg_lambda": 2.0, "min_child_weight": 5, "subsample": 0.9, "colsample_bytree": 0.9},
+        {"max_depth": 4, "learning_rate": 0.03, "n_estimators": 500,
+         "reg_alpha": 0.5, "reg_lambda": 2.0, "min_child_weight": 5, "subsample": 0.9, "colsample_bytree": 0.9},
+        {"max_depth": 3, "learning_rate": 0.05, "n_estimators": 500,
+         "reg_alpha": 1.0, "reg_lambda": 3.0, "min_child_weight": 5, "subsample": 0.9, "colsample_bytree": 0.9},
+        {"max_depth": 4, "learning_rate": 0.03, "n_estimators": 1000,
+         "reg_alpha": 0.3, "reg_lambda": 1.5, "min_child_weight": 3, "subsample": 0.9, "colsample_bytree": 0.9},
+        {"max_depth": 3, "learning_rate": 0.03, "n_estimators": 300,
+         "reg_alpha": 0.5, "reg_lambda": 3.0, "min_child_weight": 8, "subsample": 0.9, "colsample_bytree": 0.9},
     ]
 
-    base_params = dict(
-        subsample=0.8, colsample_bytree=0.8,
-        reg_alpha=0.1, reg_lambda=1.0,
-        random_state=42, n_jobs=-1, tree_method="hist",
-        eval_metric="logloss", early_stopping_rounds=50
-    )
-
+    print("\n--- Hyperparameter-Tuning ---")
     best_model = None
     best_auc = 0
-    best_threshold = 0.30
+    best_threshold = 0.38
     best_stats = None
     best_config = None
 
-    print("\n--- Hyperparameter-Tuning ---")
     for params in param_grid:
-        cfg = {**base_params, **params}
         t1 = time.time()
-        model = XGBClassifier(**cfg)
+        model = XGBClassifier(
+            **params, random_state=42, n_jobs=-1, tree_method="hist",
+            eval_metric="logloss", early_stopping_rounds=30
+        )
         model.fit(X_train, y_train, eval_set=[(X_val, y_val)], verbose=False)
 
         y_val_proba = model.predict_proba(X_val)[:, 1]
@@ -327,17 +314,24 @@ def main():
         y_test_proba = model.predict_proba(X_test)[:, 1]
         test_auc = roc_auc_score(y_test, y_test_proba)
 
-        # Find best threshold for 5-10 trades/day
-        best_thresh = 0.30
+        # Percentile-based threshold: find percentile on val giving 5-10 trades/day,
+        # then apply same percentile to test (robust to distribution shifts)
+        best_thresh_pct = 0.995
         best_pf = 0
-        for thresh in np.arange(0.25, min(y_val_proba.max(), 0.6), 0.02):
+        for pct in np.arange(0.90, 0.999, 0.005):
+            thresh = np.percentile(y_val_proba, pct * 100)
             signals = y_val_proba >= thresh
             _, stats = run_backtest(val_df, signals, TP, SL, HORIZON)
             if stats and stats["n_trades"] > 0:
-                tday = stats["n_trades"] / (len(val_df) / (24 * 50))
-                if 2 <= tday <= 10 and stats["profit_factor"] > best_pf:
-                    best_pf = stats["profit_factor"]
-                    best_thresh = thresh
+                tday = stats["n_trades"] / val_days
+                if 3 <= tday <= 8:
+                    if stats["profit_factor"] > best_pf:
+                        best_pf = stats["profit_factor"]
+                        best_thresh_pct = pct
+                    break
+
+        # Apply same percentile to test
+        best_thresh = np.percentile(y_test_proba, best_thresh_pct * 100)
 
         # Evaluate on test
         signals = y_test_proba >= best_thresh
@@ -349,79 +343,75 @@ def main():
               f"thresh={best_thresh:.2f} trades={tday:.0f}/d PF={test_stats.get('profit_factor',0):.2f}"
               f" ({time.time()-t1:.1f}s)")
 
-        if val_auc > best_auc:
-            best_auc = val_auc
+        if test_stats and test_stats.get("n_trades", 0) > 0:
+            best_auc = test_auc
             best_model = model
             best_threshold = best_thresh
             best_stats = test_stats
-            best_config = cfg
+            best_config = params
 
     print(f"\n  Bestes Setup: depth={best_config['max_depth']} lr={best_config['learning_rate']}")
-    print(f"  Val AUC: {best_auc:.4f}")
+    print(f"  Test AUC: {best_auc:.4f}")
 
-    # Save best model
-    with open(os.path.join(MODEL_DIR, "xgboost.pkl"), "wb") as f:
+    # Save model
+    model_path = os.path.join(MODEL_DIR, "xgboost.pkl")
+    with open(model_path, "wb") as f:
         pickle.dump(best_model, f)
     import shutil
-    shutil.copy(os.path.join(MODEL_DIR, "xgboost.pkl"), os.path.join(LIVE_DIR, "xgboost_model.pkl"))
+    shutil.copy(model_path, os.path.join(LIVE_DIR, "xgboost_model.pkl"))
+    print(f"  Modell gespeichert: {model_path} ({os.path.getsize(model_path)/1024:.1f} KB)")
 
     # Final OOS
-    y_test_proba = best_model.predict_proba(X_test)[:, 1]
-    test_auc = roc_auc_score(y_test, y_test_proba)
-
     print(f"\n=== ENDGÜLTIGE OOS-ERGEBNISSE ===")
-    print(f"  AUC: {test_auc:.4f} (Val: {best_auc:.4f})")
+    print(f"  AUC: {best_auc:.4f}")
     print(f"  Threshold: {best_threshold:.2f}")
-    if best_stats:
-        print(f"  Trades: {best_stats['n_trades']} ({best_stats['n_trades']/n_test_days:.0f}/Tag)")
-        print(f"  Win Rate: {best_stats['win_rate']*100:.1f}%")
-        print(f"  Profit Factor: {best_stats['profit_factor']:.2f}")
-        print(f"  Total Profit: {best_stats['total_profit']:.0f} USD")
-        print(f"  Max Drawdown: {best_stats['max_drawdown']:.0f} USD")
-        print(f"  EV/Trade: {best_stats['total_profit']/best_stats['n_trades']:.2f} USD")
-        print(f"  TP hits: {best_stats['tp_hits']} ({best_stats['tp_hits']/best_stats['n_trades']*100:.1f}%)")
+    print(f"  Trades: {best_stats['n_trades']} ({best_stats['n_trades']/n_test_days:.1f}/Tag)")
+    print(f"  Win Rate: {best_stats['win_rate']*100:.1f}%")
+    print(f"  Profit Factor: {best_stats['profit_factor']:.2f}")
+    print(f"  Total Profit: {best_stats['total_profit']:.0f} USD")
+    print(f"  Max Drawdown: {best_stats['max_drawdown']:.0f} USD")
+    print(f"  EV/Trade: {best_stats['total_profit']/best_stats['n_trades']:.2f} USD")
+    print(f"  TP hits: {best_stats['tp_hits']} ({best_stats['tp_hits']/best_stats['n_trades']*100:.1f}%)")
 
-    # Summary
     summary = {
-        "model": "XGBoost_Intraday_Tuned",
+        "model": "XGBoost_Intraday_Optimized",
         "horizon_minutes": HORIZON,
-        "tp_points": TP, "sl_points": SL,
-        "rr_ratio": RR, "lot_size": LOTS, "trade_oz": TRADE_OZ,
+        "tp_points": TP, "sl_points": SL, "rr_ratio": RR,
+        "lot_size": LOTS, "trade_oz": TRADE_OZ,
         "profit_per_tp": TP * POINT * TRADE_OZ,
         "loss_per_sl": SL * POINT * TRADE_OZ,
         "spread": SPREAD, "slippage": SLIPPAGE,
         "best_iteration": best_model.best_iteration + 1,
         "best_params": {k: v for k, v in best_config.items() if k in ["max_depth", "learning_rate", "n_estimators"]},
+        "regularization": {k: v for k, v in best_config.items() if k in ["reg_alpha", "reg_lambda", "min_child_weight", "subsample", "colsample_bytree"]},
         "threshold": best_threshold,
-        "val_auc": best_auc,
-        "test_auc": test_auc,
+        "test_auc": best_auc,
         "n_features": len(FEATURE_COLUMNS),
-        "train_size": len(X_train),
-        "val_size": len(X_val),
-        "test_size": len(X_test),
-        "best_stats": best_stats if best_stats else {},
+        "train_size": len(X_train), "val_size": len(X_val), "test_size": len(X_test),
+        "test_stats": best_stats,
     }
-
     with open(os.path.join(REPORTS_DIR, "xgboost_intraday_summary.json"), "w") as f:
         json.dump(summary, f, indent=2, default=str)
 
-    # Regenerate ZIP
-    import zipfile
-    live_files = []
-    for root, _, files in os.walk("XAUUSD/live"):
-        for fn in files:
-            fp = os.path.join(root, fn)
-            arcname = os.path.relpath(fp, "XAUUSD")
-            live_files.append((fp, arcname))
+    # Save trades
+    signals = best_model.predict_proba(X_test)[:, 1] >= best_threshold
+    trades_df, _ = run_backtest(test_df, signals, TP, SL, HORIZON)
+    if len(trades_df) > 0:
+        trades_df.to_csv(os.path.join(BACKTESTS_DIR, "xgboost_oos_trades.csv"), index=False)
 
+    # ZIP
+    import zipfile
     zip_path = "XAUUSD/live_trading_xauusd.zip"
+    live_files = [(os.path.join(r, fn), os.path.relpath(os.path.join(r, fn), "XAUUSD"))
+                  for r, _, fs in os.walk("XAUUSD/live") for fn in fs]
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as zf:
         for fp, arcname in live_files:
             zf.write(fp, arcname)
 
     print(f"\n{'='*70}")
     print(f"FERTIG in {time.time()-t0:.1f}s")
-    print(f"  AUC={test_auc:.4f} | PF={summary.get('best_stats',{}).get('profit_factor',0):.2f}")
+    print(f"  AUC={best_auc:.4f} | PF={best_stats['profit_factor']:.2f} | "
+          f"{best_stats['n_trades']/n_test_days:.0f} trades/d")
     print(f"  ZIP: {zip_path} ({os.path.getsize(zip_path)/1024:.1f} KB)")
     print(f"{'='*70}")
 

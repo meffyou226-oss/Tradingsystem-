@@ -1,35 +1,41 @@
 {
-  "model": "XGBoost_Intraday_Tuned",
-  "horizon_minutes": 10,
+  "model": "XGBoost_Intraday_Optimized",
+  "horizon_minutes": 5,
   "tp_points": 500,
-  "sl_points": 250,
-  "rr_ratio": 2.0,
+  "sl_points": 200,
+  "rr_ratio": 2.5,
   "lot_size": 0.05,
   "trade_oz": 5,
   "profit_per_tp": 25.0,
-  "loss_per_sl": 12.5,
+  "loss_per_sl": 10.0,
   "spread": 3.0,
   "slippage": 1.0,
-  "best_iteration": 71,
+  "best_iteration": 117,
   "best_params": {
-    "max_depth": 4,
+    "max_depth": 3,
     "learning_rate": 0.03,
-    "n_estimators": 1000
+    "n_estimators": 300
   },
-  "threshold": 0.3,
-  "val_auc": 0.7954317563403859,
-  "test_auc": 0.6506201695658705,
+  "regularization": {
+    "reg_alpha": 0.5,
+    "reg_lambda": 3.0,
+    "min_child_weight": 8,
+    "subsample": 0.9,
+    "colsample_bytree": 0.9
+  },
+  "threshold": 0.25488106966018687,
+  "test_auc": 0.7146277965320033,
   "n_features": 63,
   "train_size": 521211,
   "val_size": 86720,
   "test_size": 310825,
-  "best_stats": {
-    "n_trades": 1679,
-    "win_rate": 0.4800476474091721,
-    "profit_factor": 1.8414387170675832,
-    "total_profit": 9182.2,
-    "max_drawdown": -212.5,
-    "tp_hits": "803",
-    "sl_hits": "873"
+  "test_stats": {
+    "n_trades": 1555,
+    "win_rate": 0.4758842443729904,
+    "profit_factor": 2.2732401637228516,
+    "total_profit": 10358.7,
+    "max_drawdown": -135.0,
+    "tp_hits": "739",
+    "sl_hits": "813"
   }
 }

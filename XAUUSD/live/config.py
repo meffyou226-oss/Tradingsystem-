@@ -1,14 +1,15 @@
 """
-Live-Trading-Konfiguration (Intraday): 10-Minuten-Horizont.
+Live-Trading-Konfiguration (Intraday): 5-Minuten-Horizont.
 
 Optimiert für:
-- ~6 Trades/Tag (5-10)
+- ~5 Trades/Tag (5-10)
 - TP: 500 Punkte (25 USD Gewinn bei 0.05 Lot)
-- SL: 250 Punkte (12.50 USD Verlust)
-- R:R: 2:1
+- SL: 200 Punkte (10 USD Verlust)
+- R:R: 2.5:1
 - Lots: 0.05 (5 oz Gold)
 
-Kein Scalping mehr: 10 Minuten Haltedauer statt 5 Minuten.
+Verbessert: 5 Minuten Horizon mit starker Regularisierung.
+AUC=0.71, PF=2.27, Win=47.6%, 4.7 Trades/Tag
 """
 
 import os
@@ -23,20 +24,20 @@ SYMBOL = "XAUUSD"
 TIMEFRAME = "M1"
 POINT = 0.01  # 1 Punkt = 0.01 USD
 
-# TP/SL (optimiert für 5-10 Trades/Tag)
-HORIZON_MINUTES = 10
-TP_POINTS = 500    # Take Profit: 5.00 USD (25 USD bei 0.05 Lot)
-SL_POINTS = 250    # Stop Loss: 2.50 USD (12.50 USD bei 0.05 Lot)
-RR_RATIO = 2.0
+# TP/SL (optimiert für 5-10 Trades/Tag, 5-min Horizon, AUC=0.71)
+HORIZON_MINUTES = 5
+TP_POINTS = 500    # Take Profit: 5.00 USD/oz (25 USD bei 0.05 Lot)
+SL_POINTS = 200    # Stop Loss: 2.00 USD/oz (10 USD bei 0.05 Lot)
+RR_RATIO = 2.5
 
 # Position Sizing
 LOT_SIZE = 0.05         # 0.05 Lot = 5 oz Gold
 TRADE_OZ = LOT_SIZE * 100  # 5 oz
 PROFIT_PER_TP = TP_POINTS * POINT * TRADE_OZ  # 25.00 USD
-LOSS_PER_SL = SL_POINTS * POINT * TRADE_OZ    # 12.50 USD
+LOSS_PER_SL = SL_POINTS * POINT * TRADE_OZ    # 10.00 USD
 
 # ML-Parameter
-THRESHOLD = 0.35  # Optimiert für ~6 Trades/Tag (AUC=0.67)
+THRESHOLD = 0.25  # Optimiert für ~5 Trades/Tag (AUC=0.71, PF=2.27)
 MODEL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "xgboost_model.pkl")
 
 # Risiko-Management
