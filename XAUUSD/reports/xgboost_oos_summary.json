@@ -1,24 +1,11 @@
 {
-  "model": "XGBoost",
-  "best_iteration": 370,
   "best_threshold": 0.7,
-  "val_auc": 0.6206182585130692,
-  "val_acc": 0.5845453286238659,
-  "test_auc": 0.6440236030522024,
-  "test_acc": 0.6203730549917851,
-  "test_pf": 8.184205128205129,
-  "test_profit": 17511.5,
-  "test_win_rate": 0.8036174669674508,
-  "test_n_trades": 49648,
-  "test_max_dd": -2.0,
-  "test_sharpe": 713.1179313050048,
-  "tp_hit_rate": 0.8036174669674508,
-  "sl_hit_rate": 0.19638253303254916,
-  "target_params": {
-    "horizon": 5,
-    "tp_points": 50,
-    "sl_points": 25,
-    "rr_ratio": 2.0
-  },
-  "train_time_sec": 79.41731309890747
+  "oos_auc": 0.6440236030522024,
+  "oos_pf": 8.184205128205129,
+  "oos_profit": 17511.5,
+  "oos_winrate": 0.8036174669674508,
+  "wf_mean_auc": 0.6379785877767371,
+  "wf_std_auc": 0.021198757956394476,
+  "wf_mean_pf": 6.926448669061356,
+  "wf_std_pf": 0.9506938483602106
 }

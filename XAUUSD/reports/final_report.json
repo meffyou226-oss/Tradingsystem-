@@ -1,0 +1,190 @@
+{
+  "baselines": [
+    {
+      "strategy": "momentum",
+      "n_signals": 467422,
+      "n_trades": 467417,
+      "win_rate": 0.471773598307293,
+      "profit_factor": 1.7670116278456998,
+      "total_profit": 46880.28299999915,
+      "max_drawdown": -487.8469999997699,
+      "sharpe": 162.98146463594506,
+      "expectancy": 0.1002382033955221
+    },
+    {
+      "strategy": "ema_crossover",
+      "n_signals": 488538,
+      "n_trades": 488533,
+      "win_rate": 0.4689386387408834,
+      "profit_factor": 1.7447218287540602,
+      "total_profit": 47805.69599999905,
+      "max_drawdown": -492.7059999998826,
+      "sharpe": 159.19781006337658,
+      "expectancy": 0.0977993704748976
+    },
+    {
+      "strategy": "rsi_meanrev",
+      "n_signals": 97738,
+      "n_trades": 97738,
+      "win_rate": 0.5213836992776607,
+      "profit_factor": 2.159773571826788,
+      "total_profit": 13431.825999999835,
+      "max_drawdown": -120.62599999995996,
+      "sharpe": 222.8679406752856,
+      "expectancy": 0.1373863124578941
+    },
+    {
+      "strategy": "breakout",
+      "n_signals": 124643,
+      "n_trades": 124640,
+      "win_rate": 0.4707637997432606,
+      "profit_factor": 1.7614839198728522,
+      "total_profit": 12449.476999999795,
+      "max_drawdown": -191.56399999994687,
+      "sharpe": 162.14978790727784,
+      "expectancy": 0.0998277787346152
+    },
+    {
+      "strategy": "ema_momentum",
+      "n_signals": 270026,
+      "n_trades": 270021,
+      "win_rate": 0.4654934245854952,
+      "profit_factor": 1.7232029965905735,
+      "total_profit": 25842.12299999952,
+      "max_drawdown": -232.44899999987683,
+      "sharpe": 155.63009585973674,
+      "expectancy": 0.0956527569348024
+    }
+  ],
+  "xgboost_oos": {
+    "best_threshold": 0.7,
+    "oos_auc": 0.6440236030522024,
+    "oos_pf": 8.184205128205129,
+    "oos_profit": 17511.5,
+    "oos_winrate": 0.8036174669674508,
+    "wf_mean_auc": 0.6379785877767371,
+    "wf_std_auc": 0.021198757956394476,
+    "wf_mean_pf": 6.926448669061356,
+    "wf_std_pf": 0.9506938483602106
+  },
+  "xgboost_backtest": {
+    "n_trades": "302695",
+    "total_profit": "77161.61698730469",
+    "gross_wins": "101889.86698730469",
+    "gross_losses": "24728.25",
+    "profit_factor": "4.120383245369353",
+    "win_rate": "0.6732255240423529",
+    "avg_win": "0.49999444007471067",
+    "avg_loss": "0.25",
+    "expectancy": "0.25491539994814816",
+    "max_drawdown": "-4.25",
+    "avg_trade_duration_min": "0.00879763458266572",
+    "tp_hits": "203776",
+    "sl_hits": "98913",
+    "expiry_hits": "6",
+    "tp_hit_rate": "0.673205702109384",
+    "sl_hit_rate": "0.32677447595764714",
+    "expiry_rate": "1.9821932968830012e-05",
+    "max_consec_losses": "13",
+    "max_consec_wins": "57",
+    "sharpe_ratio": "436.5287356358008",
+    "spread_points": "3.0",
+    "slippage_points": "1.0",
+    "tp_points": "50",
+    "sl_points": "25",
+    "horizon": "5",
+    "rr_ratio": "2.0"
+  },
+  "walkforward": [
+    {
+      "fold": 1,
+      "train_end": "2025-02-17 00:45:00",
+      "test_end": "2025-07-03 22:24:00",
+      "auc": 0.6263735786800052,
+      "pf": 6.816867469879518,
+      "total_profit": 1207.0,
+      "win_rate": 0.7731620661382892,
+      "n_trades": 3659,
+      "max_dd": -1.5,
+      "sharpe": 632.5759101892118
+    },
+    {
+      "fold": 2,
+      "train_end": "2025-07-03 22:24:00",
+      "test_end": "2025-11-18 18:55:00",
+      "auc": 0.6527993476165207,
+      "pf": 6.795476892822026,
+      "total_profit": 2947.0,
+      "win_rate": 0.7726103968697596,
+      "n_trades": 8945,
+      "max_dd": -1.5,
+      "sharpe": 631.2918621110625
+    },
+    {
+      "fold": 3,
+      "train_end": "2025-11-18 18:55:00",
+      "test_end": "2026-04-08 23:29:00",
+      "auc": 0.6586042493696364,
+      "pf": 8.198541519642436,
+      "total_profit": 15300.5,
+      "win_rate": 0.8038935277021728,
+      "n_trades": 43354,
+      "max_dd": -1.5,
+      "sharpe": 713.9149301895799
+    },
+    {
+      "fold": 4,
+      "train_end": "2026-04-08 23:29:00",
+      "test_end": "2026-08-23 23:57:00",
+      "auc": 0.6141371754407864,
+      "pf": 5.894908793901443,
+      "total_profit": 8989.5,
+      "win_rate": 0.7466721842885716,
+      "n_trades": 28998,
+      "max_dd": -1.5,
+      "sharpe": 572.4978105446123
+    }
+  ],
+  "feature_importance_top10": [
+    {
+      "feature": "atr_14_norm",
+      "importance": 0.26628777
+    },
+    {
+      "feature": "vol_50",
+      "importance": 0.05608088
+    },
+    {
+      "feature": "candle_range",
+      "importance": 0.022315921
+    },
+    {
+      "feature": "is_asia_session",
+      "importance": 0.015736612
+    },
+    {
+      "feature": "dist_ema_10",
+      "importance": 0.014469566
+    },
+    {
+      "feature": "hour_cos",
+      "importance": 0.014211709
+    },
+    {
+      "feature": "is_london_session",
+      "importance": 0.013490593
+    },
+    {
+      "feature": "vol_20",
+      "importance": 0.0128207505
+    },
+    {
+      "feature": "breakout_high_5",
+      "importance": 0.012748705
+    },
+    {
+      "feature": "hour",
+      "importance": 0.012638304
+    }
+  ]
+}

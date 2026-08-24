@@ -1,0 +1,68 @@
+{
+  "xgboost": {
+    "model": "XGBoost_OOS",
+    "win_rate": 0.8036174669674508,
+    "profit_factor": 8.184205128205129,
+    "total_profit": 17511.5,
+    "n_trades": 49648,
+    "max_drawdown": -2.0,
+    "sharpe": 713.1179313050048
+  },
+  "baselines": [
+    {
+      "strategy": "momentum",
+      "n_signals": 467422,
+      "n_trades": 467417,
+      "win_rate": 0.471773598307293,
+      "profit_factor": 1.7670116278456998,
+      "total_profit": 46880.28299999915,
+      "max_drawdown": -487.8469999997699,
+      "sharpe": 162.98146463594506,
+      "expectancy": 0.1002382033955221
+    },
+    {
+      "strategy": "ema_crossover",
+      "n_signals": 488538,
+      "n_trades": 488533,
+      "win_rate": 0.4689386387408834,
+      "profit_factor": 1.7447218287540602,
+      "total_profit": 47805.69599999905,
+      "max_drawdown": -492.7059999998826,
+      "sharpe": 159.19781006337658,
+      "expectancy": 0.0977993704748976
+    },
+    {
+      "strategy": "rsi_meanrev",
+      "n_signals": 97738,
+      "n_trades": 97738,
+      "win_rate": 0.5213836992776607,
+      "profit_factor": 2.159773571826788,
+      "total_profit": 13431.825999999835,
+      "max_drawdown": -120.62599999995996,
+      "sharpe": 222.8679406752856,
+      "expectancy": 0.1373863124578941
+    },
+    {
+      "strategy": "breakout",
+      "n_signals": 124643,
+      "n_trades": 124640,
+      "win_rate": 0.4707637997432606,
+      "profit_factor": 1.7614839198728522,
+      "total_profit": 12449.476999999795,
+      "max_drawdown": -191.56399999994687,
+      "sharpe": 162.14978790727784,
+      "expectancy": 0.0998277787346152
+    },
+    {
+      "strategy": "ema_momentum",
+      "n_signals": 270026,
+      "n_trades": 270021,
+      "win_rate": 0.4654934245854952,
+      "profit_factor": 1.7232029965905735,
+      "total_profit": 25842.12299999952,
+      "max_drawdown": -232.44899999987683,
+      "sharpe": 155.63009585973674,
+      "expectancy": 0.0956527569348024
+    }
+  ]
+}
