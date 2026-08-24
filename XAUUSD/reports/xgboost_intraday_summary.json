@@ -1,11 +1,35 @@
 {
-  "model": "XGBoost_Intraday_10min",
+  "model": "XGBoost_Intraday_Tuned",
   "horizon_minutes": 10,
   "tp_points": 500,
   "sl_points": 250,
   "rr_ratio": 2.0,
   "lot_size": 0.05,
+  "trade_oz": 5,
   "profit_per_tp": 25.0,
-  "test_auc": 0.6742722680318346,
-  "best_iteration": 45
+  "loss_per_sl": 12.5,
+  "spread": 3.0,
+  "slippage": 1.0,
+  "best_iteration": 71,
+  "best_params": {
+    "max_depth": 4,
+    "learning_rate": 0.03,
+    "n_estimators": 1000
+  },
+  "threshold": 0.3,
+  "val_auc": 0.7954317563403859,
+  "test_auc": 0.6506201695658705,
+  "n_features": 63,
+  "train_size": 521211,
+  "val_size": 86720,
+  "test_size": 310825,
+  "best_stats": {
+    "n_trades": 1679,
+    "win_rate": 0.4800476474091721,
+    "profit_factor": 1.8414387170675832,
+    "total_profit": 9182.2,
+    "max_drawdown": -212.5,
+    "tp_hits": "803",
+    "sl_hits": "873"
+  }
 }
