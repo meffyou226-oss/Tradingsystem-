@@ -38,12 +38,16 @@ LOSS_PER_SL = SL_POINTS * POINT * TRADE_OZ    # 10.00 USD
 
 # ML-Parameter
 THRESHOLD = 0.25  # Optimiert für ~5 Trades/Tag (AUC=0.71, PF=2.27)
+TARGET_PARAMS = {"tp_points": TP_POINTS, "sl_points": SL_POINTS, "horizon": HORIZON_MINUTES, "rr": RR_RATIO}
 MODEL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "xgboost_model.pkl")
 
 # Risiko-Management
+TRADE_AMOUNT = 0.05          # Lot-Größe für Order-Execution
 MAX_TRADES_PER_DAY = 15
+MAX_TRADES_PER_HOUR = 3
 MAX_DRAWDOWN_USD = 500.0
 DAILY_LOSS_LIMIT = -1000.0
+STOP_TRADING_LOSS = -2000.0
 
 # Feature-Spalten (identisch mit Training)
 FEATURE_COLUMNS = [
