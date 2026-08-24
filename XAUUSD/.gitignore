@@ -1,0 +1,26 @@
+# Large data files - processed on disk, not tracked in git
+data/xauusd_m1_features.csv
+data/targets/xauusd_m1_targets.csv
+data/targets/target_config.csv
+data/targets/*.csv
+
+# Model binaries
+models/*.pkl
+models/*.joblib
+models/*.h5
+models/*.ckpt
+models/*.pt
+
+# Large intermediate results
+results/*.csv
+results/large_*.csv
+
+# Cache
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Keep directories
+!data/targets/.gitkeep
+!models/.gitkeep
+!results/.gitkeep
