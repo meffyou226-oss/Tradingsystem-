@@ -11,16 +11,22 @@ models/*.h5
 models/*.ckpt
 models/*.pt
 
-# Large intermediate results
-results/*.csv
+# Large intermediate results (but keep small analysis CSVs)
+results/predictions_*.csv
+results/walkforward_*.csv
 results/large_*.csv
+results/xgboost_oos/predictions_oos.csv
+
+# Large trade files
+backtests/ml_*_test_trades.csv
+backtests/baseline_*_trades.csv
+backtests/xgboost_oos_trades.csv
 
 # Cache
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
 
-# Keep directories
-!data/targets/.gitkeep
-!models/.gitkeep
-!results/.gitkeep
+# Parquet files
+data/*.parquet
+data/targets/*.parquet
