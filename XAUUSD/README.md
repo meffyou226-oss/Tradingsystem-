@@ -14,43 +14,58 @@ XAUUSD M1 ML Research Pipeline
 2. [x] Feature Engineering - `src/02_feature_engineering.py` (84 Features)
 3. [x] Target-Definition - `src/03_target_definition.py` (36 TP/SL Kombinationen)
 4. [x] Baseline-Strategien - `src/04_baseline.py` (5 Strategien)
-5. [x] XGBoost ML-Pipeline - `src/05_ml_pipeline.py`, `src/05_ml_pipeline_part2.py`
-6. [x] OOS Backtest - `src/06_backtest_report.py`, `src/05_xgboost_oos_simple.py`
-7. [ ] Robustheits-Tests (optional)
-
-### Struktur
-```
-XAUUSD/
-├── data/          # Rohdaten (symlink)
-├── src/           # Python-Quellcode
-├── models/        # Trainierte Modelle
-├── backtests/     # Backtest-Trade-Dateien
-├── results/       # CSV-Ergebnisse
-├── reports/       # Berichte und Grafiken
-└── README.md
-```
+5. [x] XGBoost ML-Pipeline - `src/05_ml_pipeline.py` + `src/05_xgboost_train.py`
+6. [x] OOS Backtest + Threshold-Optimierung - `src/05_xgboost_oos_simple.py`
 
 ### XGBoost OOS-Ergebnisse (Test: Sep 2025 - Aug 2026)
-- **AUC:** 0.644 (signifikant über 0.5)
-- **Accuracy:** 62.0%
-- **Win Rate:** 70.4% (vs Baseline 47-52%)
-- **Profit Factor:** 4.76 (vs Baseline 1.72-2.16)
-- **Total Profit:** 56.224 Punkte
-- **Max Drawdown:** -3 Punkte
+
+| Metrik | Wert |
+|--------|------|
+| **AUC** | 0.644 |
+| **Accuracy** | 62.0% |
+| **Win Rate** | 70.4% (thresh=0.50) |
+| **Profit Factor** | 4.76 (thresh=0.50) |
+| **Total Profit** | 56,224 Punkte |
+| **Max Drawdown** | -3 Punkte |
+| **Trades** | 202,195 |
+| **TP hit rate** | 70.4% |
+
+#### Threshold-Optimierung
+
+| Threshold | Trades | Win Rate | PF | Profit |
+|-----------|--------|----------|-----|--------|
+| 0.50 | 202,195 | 70.4% | **4.76** | **56,224** |
+| 0.60 | 112,487 | 75.2% | 6.83 | 28,410 |
+| 0.70 | 49,648 | 80.4% | **8.18** | 17,512 |
+
+### Vergleich: XGBoost vs Baseline (alle OOS)
+
+| Strategie | Win Rate | PF | Profit |
+|-----------|----------|-----|--------|
+| Momentum | 47.2% | 1.77 | 46,880 |
+| EMA Crossover | 46.9% | 1.74 | 47,806 |
+| RSI Mean-Rev | 52.1% | 2.16 | 13,432 |
+| Breakout | 47.1% | 1.76 | 12,449 |
+| EMA+Momentum | 46.5% | 1.72 | 25,842 |
+| **XGBoost** | **70.4%** | **4.76** | **56,224** |
 
 ### Zeitbasierte Splits
-| Periode | Zeitraum | Zeilen |
+
+| Periode | Zeitraum | Kerben |
 |---------|----------|--------|
 | Training | 2024-01-01 bis 2025-04-30 | 465.475 |
 | Validation | 2025-05-01 bis 2025-08-31 | 115.512 |
 | Test (OOS) | 2025-09-01 bis 2026-08-23 | 341.451 |
 
-### Top Features (XGBoost)
-1. `atr_14_norm` (26.6%) - Volatilität
-2. `vol_50` (5.6%) - 50-Balken Volatilität
-3. `candle_range` (2.2%) - Kerzenbreite
-4. `is_asia_session` (1.6%) - Session-Filter
-5. `dist_ema_10` (1.4%) - EMA-Abstand
+### Top 5 Features (XGBoost)
+
+| Feature | Importance |
+|---------|-----------|
+| atr_14_norm | 26.6% |
+| vol_50 | 5.6% |
+| candle_range | 2.2% |
+| is_asia_session | 1.6% |
+| dist_ema_10 | 1.4% |
 
 ### Trading-Parameter
 - Horizont: 5 Minuten
@@ -59,3 +74,15 @@ XAUUSD/
 - R:R: 2:1
 - Spread: 3 Punkte
 - Slippage: 1 Punkt
+
+### Projektstruktur
+```
+XAUUSD/
+├── data/          # Rohdaten (symlink)
+├── src/           # Python-Quellcode (12 Module)
+├── models/xgboost.pkl  # Trainiertes Modell (2 MB)
+├── backtests/     # Trading-Ergebnisse
+├── results/       # CSV-Ergebnisse
+├── reports/       # Berichte und Grafiken
+└── README.md
+```
