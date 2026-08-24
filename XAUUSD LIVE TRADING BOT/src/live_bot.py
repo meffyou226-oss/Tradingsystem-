@@ -48,13 +48,13 @@ logger = logging.getLogger(__name__)
 # === Konfiguration ===
 CONFIG = {
     "symbol": "XAUUSD",
-    "tp_points": 45,
-    "sl_points": 15,
+    "tp_points": 45,        # OOS-optimiert (PF=13.64, Win=82%)
+    "sl_points": 15,        # Realistisch: Spread+Slippage+Puffer
     "horizon_minutes": 5,
     "long_confidence_threshold": 0.75,
     "short_confidence_threshold": 0.75,
     "max_trades_per_day": 5,
-    "max_trades_per_direction": 3,  # Max 3 LONG und 3 SHORT pro Tag
+    "max_trades_per_direction": 3,
     "lot_size": 0.01,
     "magic_number": 123456,
     "spread_max": 50,
