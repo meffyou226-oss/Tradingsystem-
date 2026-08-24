@@ -1,0 +1,129 @@
+{
+  "config": {
+    "max_trades_per_day": 8,
+    "confidence_threshold": 0.75,
+    "tp_points": 45,
+    "sl_points": 15,
+    "horizon": 5
+  },
+  "performance": {
+    "n_trades": 1653,
+    "trades_per_day": 4.643258426966292,
+    "win_rate": 0.8197217180883243,
+    "profit_factor": 13.640939597315443,
+    "total_profit_points": 565.0500000000001,
+    "total_profit_usd": 5.650500000000001,
+    "max_drawdown_points": -0.7500000000000284,
+    "sharpe": 892.4994566278139
+  },
+  "monthly": [
+    {
+      "month": "2025-09",
+      "n_trades": 56,
+      "profit": 18.6,
+      "wins": 45,
+      "losses": 11,
+      "win_rate": 0.8035714285714286,
+      "profit_usd": 0.18600000000000003
+    },
+    {
+      "month": "2025-10",
+      "n_trades": 161,
+      "profit": 50.85,
+      "wins": 125,
+      "losses": 36,
+      "win_rate": 0.7763975155279503,
+      "profit_usd": 0.5085000000000001
+    },
+    {
+      "month": "2025-11",
+      "n_trades": 120,
+      "profit": 37.800000000000004,
+      "wins": 93,
+      "losses": 27,
+      "win_rate": 0.775,
+      "profit_usd": 0.37800000000000006
+    },
+    {
+      "month": "2025-12",
+      "n_trades": 144,
+      "profit": 51.0,
+      "wins": 121,
+      "losses": 23,
+      "win_rate": 0.8402777777777778,
+      "profit_usd": 0.51
+    },
+    {
+      "month": "2026-01",
+      "n_trades": 160,
+      "profit": 54.0,
+      "wins": 130,
+      "losses": 30,
+      "win_rate": 0.8125,
+      "profit_usd": 0.54
+    },
+    {
+      "month": "2026-02",
+      "n_trades": 146,
+      "profit": 51.9,
+      "wins": 123,
+      "losses": 23,
+      "win_rate": 0.8424657534246576,
+      "profit_usd": 0.519
+    },
+    {
+      "month": "2026-03",
+      "n_trades": 176,
+      "profit": 61.800000000000004,
+      "wins": 147,
+      "losses": 29,
+      "win_rate": 0.8352272727272727,
+      "profit_usd": 0.6180000000000001
+    },
+    {
+      "month": "2026-04",
+      "n_trades": 160,
+      "profit": 62.4,
+      "wins": 144,
+      "losses": 16,
+      "win_rate": 0.9,
+      "profit_usd": 0.624
+    },
+    {
+      "month": "2026-05",
+      "n_trades": 139,
+      "profit": 43.95,
+      "wins": 108,
+      "losses": 31,
+      "win_rate": 0.7769784172661871,
+      "profit_usd": 0.43950000000000006
+    },
+    {
+      "month": "2026-06",
+      "n_trades": 160,
+      "profit": 54.6,
+      "wins": 131,
+      "losses": 29,
+      "win_rate": 0.81875,
+      "profit_usd": 0.546
+    },
+    {
+      "month": "2026-07",
+      "n_trades": 137,
+      "profit": 46.65,
+      "wins": 112,
+      "losses": 25,
+      "win_rate": 0.8175182481751825,
+      "profit_usd": 0.46649999999999997
+    },
+    {
+      "month": "2026-08",
+      "n_trades": 94,
+      "profit": 31.5,
+      "wins": 76,
+      "losses": 18,
+      "win_rate": 0.8085106382978723,
+      "profit_usd": 0.315
+    }
+  ]
+}

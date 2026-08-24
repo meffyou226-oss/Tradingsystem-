@@ -1,0 +1,37 @@
+{
+  "n_days": 356,
+  "scenarios": {
+    "1. Ungefiltert (0.50)": {
+      "n_trades": 202195,
+      "trades_per_day": 567.9634831460675,
+      "win_rate": 0.7040925838917876,
+      "profit_factor": 4.758860786005582,
+      "total_profit": 56224.099921875,
+      "max_drawdown": -2.75
+    },
+    "2. Confidence>=0.70": {
+      "n_trades": 49648,
+      "trades_per_day": 139.46067415730337,
+      "win_rate": 0.8036174669674508,
+      "profit_factor": 8.184205128205129,
+      "total_profit": 17511.5,
+      "max_drawdown": -2.0
+    },
+    "3. Realistisch (3/Tag)": {
+      "n_trades": 664,
+      "trades_per_day": 1.8651685393258426,
+      "win_rate": 0.8237951807228916,
+      "profit_factor": 9.350427350427351,
+      "total_profit": 244.25,
+      "max_drawdown": -0.75
+    },
+    "4. Konservativ (1/Tag)": {
+      "n_trades": 194,
+      "trades_per_day": 0.5449438202247191,
+      "win_rate": 0.845360824742268,
+      "profit_factor": 10.933333333333334,
+      "total_profit": 74.5,
+      "max_drawdown": -0.5
+    }
+  }
+}

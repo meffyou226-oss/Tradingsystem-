@@ -1,0 +1,212 @@
+{
+  "rolling_window": [
+    {
+      "window": 1,
+      "train_period": "2024-01 bis 2025-01",
+      "test_period": "2025-01 bis 2025-04",
+      "n_trades": 59,
+      "win_rate": 0.7457627118644068,
+      "profit_factor": 8.8,
+      "total_profit": 17.55,
+      "max_drawdown": -0.45000000000000107,
+      "auc": 0.5914175455124985
+    },
+    {
+      "window": 2,
+      "train_period": "2024-04 bis 2025-04",
+      "test_period": "2025-04 bis 2025-07",
+      "n_trades": 307,
+      "win_rate": 0.8338762214983714,
+      "profit_factor": 15.058823529411766,
+      "total_profit": 107.55000000000001,
+      "max_drawdown": -0.29999999999999716,
+      "auc": 0.6240680032413144
+    },
+    {
+      "window": 3,
+      "train_period": "2024-07 bis 2025-07",
+      "test_period": "2025-07 bis 2025-10",
+      "n_trades": 178,
+      "win_rate": 0.7528089887640449,
+      "profit_factor": 9.136363636363635,
+      "total_profit": 53.7,
+      "max_drawdown": -0.45000000000000107,
+      "auc": 0.6059965618347869
+    },
+    {
+      "window": 4,
+      "train_period": "2024-10 bis 2025-10",
+      "test_period": "2025-10 bis 2026-01",
+      "n_trades": 458,
+      "win_rate": 0.7794759825327511,
+      "profit_factor": 10.603960396039607,
+      "total_profit": 145.50000000000003,
+      "max_drawdown": -0.45000000000001705,
+      "auc": 0.6316240986375451
+    },
+    {
+      "window": 5,
+      "train_period": "2025-01 bis 2026-01",
+      "test_period": "2026-01 bis 2026-04",
+      "n_trades": 484,
+      "win_rate": 0.8243801652892562,
+      "profit_factor": 14.082352941176476,
+      "total_profit": 166.80000000000004,
+      "max_drawdown": -0.7500000000000284,
+      "auc": 0.6549389115296715
+    },
+    {
+      "window": 6,
+      "train_period": "2025-04 bis 2026-04",
+      "test_period": "2026-04 bis 2026-07",
+      "n_trades": 504,
+      "win_rate": 0.7797619047619048,
+      "profit_factor": 10.621621621621628,
+      "total_profit": 160.20000000000005,
+      "max_drawdown": -0.45000000000001705,
+      "auc": 0.6231962884336196
+    }
+  ],
+  "regime_analysis": [
+    {
+      "regime": "High_Trend",
+      "n_candles": 92412,
+      "n_trades": 1138,
+      "win_rate": 0.8084358523725835,
+      "profit_factor": 12.660550458715605,
+      "total_profit": 381.30000000000007,
+      "max_drawdown": -0.599999999999909
+    },
+    {
+      "regime": "High_Range",
+      "n_candles": 78313,
+      "n_trades": 504,
+      "win_rate": 0.8452380952380952,
+      "profit_factor": 16.384615384615387,
+      "total_profit": 180.00000000000006,
+      "max_drawdown": -0.45000000000001705
+    }
+  ],
+  "statistical_tests": {
+    "t_test": {
+      "t_stat": 60.23693568187428,
+      "p_value": 0.0
+    },
+    "sharpe_test": {
+      "sharpe": 892.4994566278139,
+      "z_score": 57.49775386290039,
+      "p_value": 0.0
+    },
+    "pf_ci": [
+      12.118902439024396,
+      15.50373134328359
+    ],
+    "random_comparison": {
+      "z_score": 11.527956884855017
+    }
+  },
+  "monte_carlo": {
+    "equity_mean": 565.049999999999,
+    "equity_std": 3.2233777277089784e-13,
+    "var_5": 565.0499999999986,
+    "var_1": 565.0499999999984,
+    "dd_mean": -0.6076499999999784,
+    "dd_std": 0.12097097792443974,
+    "prob_profit": 1.0
+  },
+  "drawdown": {
+    "n_dd_periods": 246,
+    "max_dd": -0.7500000000000284,
+    "avg_dd_duration": 1.2276422764227641
+  },
+  "parameter_stability": [
+    {
+      "conf": 0.7,
+      "max_daily": 5,
+      "tp": 45,
+      "sl": 15,
+      "n_trades": 1191,
+      "win_rate": 0.7791771620486986,
+      "profit_factor": 10.585551330798484,
+      "total_profit": 378.1500000000001,
+      "max_drawdown": -0.7500000000000284
+    },
+    {
+      "conf": 0.75,
+      "max_daily": 5,
+      "tp": 45,
+      "sl": 15,
+      "n_trades": 1076,
+      "win_rate": 0.820631970260223,
+      "profit_factor": 13.725388601036276,
+      "total_profit": 368.4000000000001,
+      "max_drawdown": -0.6000000000000227
+    },
+    {
+      "conf": 0.8,
+      "max_daily": 5,
+      "tp": 45,
+      "sl": 15,
+      "n_trades": 829,
+      "win_rate": 0.8250904704463209,
+      "profit_factor": 14.151724137931037,
+      "total_profit": 286.05000000000007,
+      "max_drawdown": -0.45000000000001705
+    },
+    {
+      "conf": 0.75,
+      "max_daily": 3,
+      "tp": 45,
+      "sl": 15,
+      "n_trades": 666,
+      "win_rate": 0.8303303303303303,
+      "profit_factor": 14.681415929203546,
+      "total_profit": 231.90000000000003,
+      "max_drawdown": -0.45000000000000007
+    },
+    {
+      "conf": 0.75,
+      "max_daily": 8,
+      "tp": 45,
+      "sl": 15,
+      "n_trades": 1653,
+      "win_rate": 0.8197217180883243,
+      "profit_factor": 13.640939597315443,
+      "total_profit": 565.0500000000001,
+      "max_drawdown": -0.7500000000000284
+    },
+    {
+      "conf": 0.75,
+      "max_daily": 5,
+      "tp": 50,
+      "sl": 25,
+      "n_trades": 1076,
+      "win_rate": 0.8150557620817844,
+      "profit_factor": 8.814070351758794,
+      "total_profit": 388.75,
+      "max_drawdown": -1.0
+    },
+    {
+      "conf": 0.75,
+      "max_daily": 5,
+      "tp": 30,
+      "sl": 15,
+      "n_trades": 1076,
+      "win_rate": 0.8671003717472119,
+      "profit_factor": 13.048951048951047,
+      "total_profit": 258.45,
+      "max_drawdown": -0.45000000000001705
+    },
+    {
+      "conf": 0.75,
+      "max_daily": 5,
+      "tp": 60,
+      "sl": 20,
+      "n_trades": 1076,
+      "win_rate": 0.7881040892193308,
+      "profit_factor": 11.1578947368421,
+      "total_profit": 463.19999999999993,
+      "max_drawdown": -0.7999999999999545
+    }
+  ]
+}
