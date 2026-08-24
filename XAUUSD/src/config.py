@@ -23,20 +23,26 @@ BACKTESTS_DIR = os.path.join(BASE_DIR, "backtests")
 for d in [MODELS_DIR, RESULTS_DIR, REPORTS_DIR, BACKTESTS_DIR]:
     os.makedirs(d, exist_ok=True)
 
-# === Trading-Parameter ===
+# === Trading-Parameter (Intraday-Optimiert: 10 Min Horizon) ===
 POINT = 0.01  # 1 Punkt = 0.01 USD für XAUUSD
 
-# Standard Target: 5-Minuten-Horizont, TP=50pts, SL=25pts, R:R=2:1
+# Intraday Target: 10-Minuten-Horizont, TP=500pts, SL=250pts, R:R=2:1
+# 0.05 Lots (5 oz) → 25 USD Gewinn pro TP, ~16 USD Verlust pro SL
 TARGET_PARAMS = {
-    "horizon": 5,       # Minuten
-    "tp_points": 50,    # Take Profit in Punkten
-    "sl_points": 25,    # Stop Loss in Punkten
-    "rr_ratio": 2.0,    # Risk/Reward
+    "horizon": 10,       # Minuten
+    "tp_points": 500,    # Take Profit in Punkten (5.00 USD, 25 USD @ 0.05 Lot)
+    "sl_points": 250,    # Stop Loss in Punkten (2.50 USD, 12.50 USD @ 0.05 Lot)
+    "rr_ratio": 2.0,     # Risk/Reward
 }
 
 # Trading-Kosten
-SPREAD_POINTS = 3.0     # Typischer XAUUSD Spread (3 Punkte = 0.03 USD)
-SLIPPAGE_POINTS = 1.0   # Slippage (1 Punkt = 0.01 USD)
+SPREAD_POINTS = 3.0     # Typischer XAUUSD Spread
+SLIPPAGE_POINTS = 1.0   # Slippage
+
+# Lot-Größe für Live-Trading
+LOT_SIZE = 0.05         # 0.05 Lot = 5 oz Gold
+OZ_PER_LOT = 100        # XAUUSD: 1 Lot = 100 oz
+TRADE_OZ = LOT_SIZE * OZ_PER_LOT  # 5 oz
 
 # === Zeitliche Splits (für Walk-Forward) ===
 # Daten: Jan 2024 - Aug 2026
@@ -117,4 +123,4 @@ MODELS = {
 
 # === Hauptmodell ===
 PRIMARY_MODEL = "xgboost"
-TARGET_COLUMN = "target_h5_sl25_rr2.0"
+TARGET_COLUMN = "target_h10_sl250_rr2.0"

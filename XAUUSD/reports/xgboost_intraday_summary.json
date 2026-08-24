@@ -1,0 +1,11 @@
+{
+  "model": "XGBoost_Intraday_10min",
+  "horizon_minutes": 10,
+  "tp_points": 500,
+  "sl_points": 250,
+  "rr_ratio": 2.0,
+  "lot_size": 0.05,
+  "profit_per_tp": 25.0,
+  "test_auc": 0.6742722680318346,
+  "best_iteration": 45
+}

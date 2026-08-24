@@ -1,42 +1,50 @@
 """
-Live-Trading-Konfiguration für XAUUSD M1 mit MT5-Anbindung.
+Live-Trading-Konfiguration (Intraday): 10-Minuten-Horizont.
 
-Konfiguriert:
-- MT5 Verbindungsparameter
-- Symbol und Timeframe
-- Trading-Parameter (TP/SL, Spread, Horizont)
-- Risiko-Management (Positionsgröße, Max Trades)
-- Feature-Liste (muss mit Training übereinstimmen)
+Optimiert für:
+- ~6 Trades/Tag (5-10)
+- TP: 500 Punkte (25 USD Gewinn bei 0.05 Lot)
+- SL: 250 Punkte (12.50 USD Verlust)
+- R:R: 2:1
+- Lots: 0.05 (5 oz Gold)
+
+Kein Scalping mehr: 10 Minuten Haltedauer statt 5 Minuten.
 """
 
 import os
 
 # === MT5-Konfiguration ===
-MT5_LOGIN = None       # Setzen Sie Ihre Kontonummer hier (oder None für aktuelles Konto)
+MT5_LOGIN = None       # Setzen Sie Ihre Kontonummer hier
 MT5_PASSWORD = None    # Setzen Sie Ihr Passwort hier
-MT5_SERVER = None      # Setzen Sie Ihren Server hier (z.B. "MetaQuotes-Demo")
+MT5_SERVER = None      # Setzen Sie Ihren Server hier
 
-# === Trading-Parameter ===
+# === Intraday Trading-Parameter ===
 SYMBOL = "XAUUSD"
 TIMEFRAME = "M1"
-POINT = 0.01  # 1 Punkt = 0.01 USD für XAUUSD
+POINT = 0.01  # 1 Punkt = 0.01 USD
 
-# TP/SL (muss mit trainiertem Modell übereinstimmen)
-TP_POINTS = 50    # Take Profit: 0.50 USD
-SL_POINTS = 25    # Stop Loss: 0.25 USD
-HORIZON_MINUTES = 5
+# TP/SL (optimiert für 5-10 Trades/Tag)
+HORIZON_MINUTES = 10
+TP_POINTS = 500    # Take Profit: 5.00 USD (25 USD bei 0.05 Lot)
+SL_POINTS = 250    # Stop Loss: 2.50 USD (12.50 USD bei 0.05 Lot)
+RR_RATIO = 2.0
 
-# Risiko-Management
-TRADE_AMOUNT = 0.01   # Lot-Größe (Standard: 0.01 Lot = 1 Micro Lot)
-MAX_TRADES_PER_HOUR = 50
-MAX_DRAWDOWN_USD = 500.0
-STOP_TRADING_LOSS = -1000.0  # Stop-Trading bei täglichem Verlust
+# Position Sizing
+LOT_SIZE = 0.05         # 0.05 Lot = 5 oz Gold
+TRADE_OZ = LOT_SIZE * 100  # 5 oz
+PROFIT_PER_TP = TP_POINTS * POINT * TRADE_OZ  # 25.00 USD
+LOSS_PER_SL = SL_POINTS * POINT * TRADE_OZ    # 12.50 USD
 
 # ML-Parameter
-THRESHOLD = 0.70  # Classification-Threshold für Signalgenerierung
+THRESHOLD = 0.35  # Optimiert für ~6 Trades/Tag (AUC=0.67)
 MODEL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "xgboost_model.pkl")
 
-# === Feature-Spalten (muss mit Training übereinstimmen) ===
+# Risiko-Management
+MAX_TRADES_PER_DAY = 15
+MAX_DRAWDOWN_USD = 500.0
+DAILY_LOSS_LIMIT = -1000.0
+
+# Feature-Spalten (identisch mit Training)
 FEATURE_COLUMNS = [
     "candle_return", "candle_range", "body_size", "upper_wick", "lower_wick",
     "body_to_range", "wick_to_range",
@@ -66,13 +74,11 @@ ROC_PERIODS = [1, 3, 5, 10, 15, 20, 50]
 BB_PERIOD = 20
 BB_STD = 2.0
 RECENT_PERIODS = [5, 10, 20, 50]
-PREV_DAY_BARS = 390  # ~6.5 Stunden M1
+PREV_DAY_BARS = 390
+
+# Trading-Hours (UTC) - XAUUSD 24/7, aber nur aktiv in Hauptsessions
+TRADING_START_HOUR = 6   # London Session beginnt
+TRADING_END_HOUR = 24
 
 # Logging
 LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "live_trading.log")
-LOG_LEVEL = "INFO"
-
-# Trading-Hours (UTC) - nur aktiv während Markt
-TRADING_START_HOUR = 0   # 24/7 für XAUUSD
-TRADING_END_HOUR = 24
-ENABLE_SHORT_TRADING = False  # Nur Long-Positionen
